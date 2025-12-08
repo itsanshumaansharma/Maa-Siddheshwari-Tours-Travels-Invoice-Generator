@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maa Siddheshwari Tours & Travels Invoice Generator</title>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            max-width: 900px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+        form {
+            display: grid;
+            gap: 20px;
+        }
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: block;
+            color: #555;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        input, textarea {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            width: 100%;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        .table-container {
+            overflow-x: auto;
+            border-radius: 6px;
+            border: 1px solid #eee;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+        }
+        th {
+            background-color: #343a40;
+            color: white;
+            font-weight: 500;
+        }
+        td input {
+            padding: 8px;
+        }
+        .action-btn {
+            padding: 8px 12px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .action-btn:hover {
+            background-color: #c82333;
+        }
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .btn {
+            padding: 12px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.1s, opacity 0.3s;
+        }
+        .btn-preview {
+            background-color: #17a2b8;
+        }
+        .btn:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        #total-amount {
+            font-weight: 700;
+            font-size: 20px;
+            text-align: right;
+            color: #2c3e50;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        #amount-words {
+            font-style: italic;
+            color: #666;
+            margin-top: -10px;
+        }
+        .developer-credit {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #888;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.6); 
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 2vh auto; 
+            padding: 0;
+            border: none;
+            width: 90%; 
+            height: 95%;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            padding: 15px;
+            background: #f1f1f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+        }
+        .close {
+            color: #555;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .close:hover {
+            color: #000;
+        }
+        iframe {
+            width: 100%;
+            flex-grow: 1;
+            border: none;
+        }
+
+        /* Responsive design */
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            table, th, td {
+                font-size: 14px;
+            }
+            .button-group {
+                flex-direction: column;
+            }
+            th, td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-file-invoice"></i> Invoice Generator</h1>
+        <form id="invoice-form">
+            <div class="form-row">
+                <div>
+                    <label for="invoice-no">Invoice No:</label>
+                    <input type="text" id="invoice-no" required>
+                </div>
+                <div>
+                    <label for="invoice-date">Invoice Date:</label>
+                    <input type="date" id="invoice-date" required>
+                </div>
+            </div>
+
+            <div>
+                <label for="customer">To (Customer Name & Address):</label>
+                <textarea id="customer" rows="3" placeholder="Enter customer name and full address..." required></textarea>
+            </div>
+
+            <div>
+                <label for="journey-date">Journey Date:</label>
+                <input type="text" id="journey-date" placeholder="e.g., 07/12/2025 & 08/12/2025" required>
+            </div>
+
+            <div class="table-container">
+                <table id="items-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">Sl No</th>
+                            <th>Description</th>
+                            <th style="width: 120px;">Rate (Rs)</th>
+                            <th style="width: 120px;">Distance (Km)</th>
+                            <th style="width: 140px;">Amount (Rs)</th>
+                            <th style="width: 80px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows will be added here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <button type="button" class="btn" id="add-row" style="background-color: #6c757d;">
+                <i class="fas fa-plus-circle"></i> Add Row
+            </button>
+
+            <div id="total-amount">Total: 0.00 Rs.</div>
+
+            <div id="amount-words">Amount in words: Zero Rupees Only.</div>
+
+            <div class="button-group">
+                <button type="button" class="btn btn-preview" id="preview-pdf">
+                    <i class="fas fa-eye"></i> Preview Invoice
+                </button>
+                <button type="button" class="btn" id="generate-pdf">
+                    <i class="fas fa-file-pdf"></i> Download PDF
+                </button>
+            </div>
+
+            <div class="developer-credit">
+                Developed by Anshumaan Sharma
+            </div>
+        </form>
+    </div>
+
+    <!-- Preview Modal -->
+    <div id="previewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span style="font-weight: bold; font-size: 18px;">Invoice Preview</span>
+                <span class="close">&times;</span>
+            </div>
+            <iframe id="pdf-frame"></iframe>
+        </div>
+    </div>
+
+    <!-- Images (Assuming files exist) -->
+    <img id="logo-img" src="logo.png" style="display:none;" crossorigin="anonymous">
+    <img id="watermark-img" src="watermark.png" style="display:none;" crossorigin="anonymous">
+    <img id="qr-img" src="qr.jpeg" style="display:none;" crossorigin="anonymous">
+
+    <!-- jsPDF library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
+
+    <script>
+        // Function to convert number to words (Indian Rupees style)
+        function numberToWords(num) {
+            if (num === 0) return 'Zero Rupees Only.';
+            const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+            const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+            const scales = ['', 'Thousand', 'Lakh', 'Crore'];
+
+            function helper(n) {
+                if (n < 20) return ones[n];
+                if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
+                if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' ' + helper(n % 100) : '');
+                let str = '';
+                let scaleIndex = 0;
+                while (n > 0) {
+                    let chunk = scaleIndex === 0 ? n % 1000 : n % 100;
+                    if (chunk) str = helper(chunk) + (scales[scaleIndex] ? ' ' + scales[scaleIndex] : '') + (str ? ' ' + str : '');
+                    n = Math.floor(n / (scaleIndex === 0 ? 1000 : 100));
+                    scaleIndex++;
+                }
+                return str;
+            }
+            return helper(num) + ' Rupees Only.';
+        }
+
+        // Get fiscal year like 25-26
+        function getFiscalYear() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const fiscalStart = year % 100;
+            const fiscalEnd = (year + 1) % 100;
+            return `${fiscalStart.toString().padStart(2, '0')}-${fiscalEnd.toString().padStart(2, '0')}`;
+        }
+
+        // Get next invoice number using localStorage
+        function getNextInvoiceNo() {
+            const fiscal = getFiscalYear();
+            const key = `invoice_seq_${fiscal}`;
+            let seq = parseInt(localStorage.getItem(key) || '0', 10) + 1;
+            localStorage.setItem(key, seq); 
+            return `MSTT/${fiscal}/${seq.toString().padStart(2, '0')}`;
+        }
+
+        // Initialize invoice no
+        document.getElementById('invoice-no').value = getNextInvoiceNo();
+        
+        // Set today as default date
+        document.getElementById('invoice-date').valueAsDate = new Date();
+
+        // Add row function
+        let rowCount = 0;
+        document.getElementById('add-row').addEventListener('click', () => {
+            rowCount++;
+            const tbody = document.querySelector('#items-table tbody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${rowCount}</td>
+                <td><input type="text" class="desc" required placeholder="Description"></td>
+                <td><input type="number" class="rate" min="0" placeholder="0"></td>
+                <td><input type="number" class="dist" min="0" placeholder="0"></td>
+                <td><input type="number" class="amount" min="0" required readonly placeholder="0.00"></td>
+                <td><button type="button" class="action-btn delete-row"><i class="fas fa-trash"></i></button></td>
+            `;
+            tbody.appendChild(row);
+            attachRowListeners(row);
+            updateSlNos();
+        });
+
+        // Attach listeners to row inputs
+        function attachRowListeners(row) {
+            const rateInput = row.querySelector('.rate');
+            const distInput = row.querySelector('.dist');
+            const amountInput = row.querySelector('.amount');
+            const updateAmount = () => {
+                const rate = parseFloat(rateInput.value) || 0;
+                const dist = parseFloat(distInput.value) || 0;
+                if (rate > 0 && dist > 0) {
+                    amountInput.value = (rate * dist).toFixed(2);
+                } else {
+                    amountInput.value = '';
+                }
+                calculateTotal();
+            };
+            rateInput.addEventListener('input', updateAmount);
+            distInput.addEventListener('input', updateAmount);
+            amountInput.addEventListener('input', calculateTotal);
+            row.querySelector('.delete-row').addEventListener('click', () => {
+                row.remove();
+                rowCount--;
+                updateSlNos();
+                calculateTotal();
+            });
+        }
+
+        // Update serial numbers
+        function updateSlNos() {
+            const rows = document.querySelectorAll('#items-table tbody tr');
+            rows.forEach((row, index) => {
+                row.querySelector('td:first-child').textContent = index + 1;
+            });
+        }
+
+        // Calculate total
+        function calculateTotal() {
+            const amounts = document.querySelectorAll('.amount');
+            let total = 0;
+            amounts.forEach(input => {
+                total += parseFloat(input.value) || 0;
+            });
+            document.getElementById('total-amount').textContent = `Total: ${total.toFixed(2)} Rs.`;
+            document.getElementById('amount-words').textContent = `Amount in words: ${numberToWords(Math.floor(total))}`;
+            return total;
+        }
+
+        // Helper to safely add image
+        function safeAddImage(doc, imgId, format, x, y, w, h) {
+            const img = document.getElementById(imgId);
+            if (img && img.naturalWidth > 0) {
+                try {
+                    doc.addImage(img, format, x, y, w, h);
+                } catch (e) {
+                    console.warn(`Could not add image ${imgId}:`, e);
+                }
+            }
+        }
+
+        // Core PDF Generation Logic
+        function createPDFInstance() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const margin = 10;
+
+            // --- HEADER ---
+            // Logo
+            safeAddImage(doc, 'logo-img', 'PNG', 10, 8, 30, 30);
+
+            // Company Text
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(18);
+            doc.text('MAA SIDDHESHWARI TOURS & TRAVELS', pageWidth / 2, 18, { align: 'center' });
+            
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10);
+            doc.text('PATNA - 800007', pageWidth / 2, 24, { align: 'center' });
+            doc.setFont("helvetica", "bold");
+            doc.text('MOB.: +91 6200186948', pageWidth / 2, 29, { align: 'center' });
+
+            // Tax Invoice Bar
+            doc.setFillColor(240, 240, 240); // Light grey bg
+            doc.rect(margin, 40, pageWidth - (margin * 2), 7, 'F');
+            doc.rect(margin, 40, pageWidth - (margin * 2), 7, 'S'); // Border
+            doc.setFontSize(12);
+            doc.text('TAX INVOICE', pageWidth / 2, 45, { align: 'center' });
+
+            // --- INFO BLOCK (To / Invoice Details) ---
+            const customer = document.getElementById('customer').value || '-';
+            const invoiceNo = document.getElementById('invoice-no').value || '-';
+            const invoiceDate = document.getElementById('invoice-date').value;
+            const formattedDate = invoiceDate ? invoiceDate.split('-').reverse().join('/') : '-';
+            const journeyDate = document.getElementById('journey-date').value || '-';
+
+            // We use autoTable for the "To" and "Invoice Info" section to get the grid look
+            doc.autoTable({
+                startY: 47,
+                margin: { left: margin, right: margin },
+                theme: 'plain',
+                styles: { 
+                    lineColor: [0, 0, 0], 
+                    lineWidth: 0.1, 
+                    fontSize: 10,
+                    cellPadding: 3,
+                    valign: 'top'
+                },
+                columnStyles: {
+                    0: { cellWidth: (pageWidth - 20) * 0.6 }, // 60% width for customer
+                    1: { cellWidth: (pageWidth - 20) * 0.4 }  // 40% width for details
+                },
+                body: [
+                    [
+                        { 
+                            content: `To\n\n${customer}`, 
+                            styles: { fontStyle: 'bold' } 
+                        },
+                        { 
+                            content: `Invoice No- ${invoiceNo}\nInvoice Date- ${formattedDate}\n\nJourney Date: ${journeyDate}`, 
+                            styles: { fontStyle: 'bold' }
+                        }
+                    ]
+                ]
+            });
+
+            // --- ITEMS TABLE ---
+            const rows = [];
+            const tableRows = document.querySelectorAll('#items-table tbody tr');
+            tableRows.forEach(row => {
+                const rate = row.querySelector('.rate').value;
+                const dist = row.querySelector('.dist').value;
+                const amt = row.querySelector('.amount').value;
+                
+                rows.push([
+                    row.querySelector('td:first-child').textContent,
+                    row.querySelector('.desc').value,
+                    rate ? `Rs. ${rate} / Km` : '', // Automatic unit
+                    dist ? `${dist} Km` : '',       // Automatic unit
+                    amt ? `${parseFloat(amt).toFixed(2)}` : ''
+                ]);
+            });
+
+            // Calculate Total
+            const total = calculateTotal();
+            
+            // Append Total Row to the body data for grid alignment
+            rows.push([
+                { content: '', colSpan: 3, styles: { } }, // Removed lineWidth:0 to ensure borders are drawn (closed table)
+                { content: 'Total:-', styles: { fontStyle: 'bold', halign: 'right' } },
+                { content: `${total.toFixed(2)}`, styles: { fontStyle: 'bold' } }
+            ]);
+
+            doc.autoTable({
+                startY: doc.lastAutoTable.finalY, // Continue from previous table
+                margin: { left: margin, right: margin },
+                head: [['Sl No', 'Description', 'Rate per Km', 'Travel Distance', 'Amount in Rs.']],
+                body: rows,
+                theme: 'grid', // This gives the black borders
+                styles: { 
+                    fontSize: 10,
+                    lineColor: [0, 0, 0],
+                    lineWidth: 0.1,
+                    textColor: [0, 0, 0] // Default text black
+                },
+                headStyles: { 
+                    fillColor: [44, 62, 80], // Light Black / Dark Grey background
+                    textColor: [255, 255, 255], // White text
+                    fontStyle: 'bold',
+                    halign: 'center'
+                },
+                columnStyles: {
+                    0: { halign: 'center', cellWidth: 15 },
+                    2: { halign: 'center' },
+                    3: { halign: 'center' },
+                    4: { halign: 'right' }
+                },
+                didParseCell: function(data) {
+                    // Custom styling logic if needed beyond basic config
+                }
+            });
+
+            // --- AMOUNT IN WORDS ---
+            const finalY = doc.lastAutoTable.finalY + 2;
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(10);
+            
+            // Draw a border for words
+            doc.rect(margin, finalY, pageWidth - (margin * 2), 8);
+            doc.text(`Amount in words:- ${numberToWords(Math.floor(total))}`, margin + 2, finalY + 5);
+
+            // --- FOOTER SECTION (Payment & Sign) ---
+            const footerY = finalY + 8;
+            const footerHeight = 55; // Increased height to accommodate signature below QR
+            doc.rect(margin, footerY, pageWidth - (margin * 2), footerHeight);
+
+            // Payment Details (Left)
+            doc.setFont("helvetica", "normal");
+            doc.text('Payment Details:-', margin + 5, footerY + 6);
+            doc.text('A/C Name : Suraj Kumar', margin + 10, footerY + 12);
+            doc.text('A/c No. : 922010023577549', margin + 10, footerY + 18);
+            doc.text('IFSC Code: UTIB0000142', margin + 10, footerY + 24);
+            doc.text('UPI ID : 6200186948@yescred', margin + 10, footerY + 30);
+
+            // Signature Block & QR Position Calculation
+            const signatureCenterX = 165; // Moved left from 175 to prevent text clipping
+            const qrSize = 30;
+            const qrX = signatureCenterX - (qrSize / 2);
+
+            // QR Code (Above Signature)
+            safeAddImage(doc, 'qr-img', 'PNG', qrX, footerY + 3, qrSize, qrSize);
+
+            // Signature Block (Below QR Code)
+            doc.setFontSize(10);
+            doc.text('Maa Sidheshwar Tours & Travels', signatureCenterX, footerY + 40, { align: 'center' });
+            doc.setFontSize(9);
+            doc.text('Authorised by', signatureCenterX, footerY + 45, { align: 'center' });
+            
+            // --- WATERMARK ---
+            try {
+                const watermarkImg = document.getElementById('watermark-img');
+                if(watermarkImg && watermarkImg.naturalWidth > 0) {
+                    doc.saveGraphicsState();
+                    doc.setGState(new doc.GState({ opacity: 0.15 }));
+                    doc.addImage(watermarkImg, 'PNG', pageWidth / 2 - 50, pageHeight / 2 - 50, 100, 100);
+                    doc.restoreGraphicsState();
+                }
+            } catch(e) {
+                console.log("Watermark skipped");
+            }
+
+            return doc;
+        }
+
+        // Preview PDF Button
+        document.getElementById('preview-pdf').addEventListener('click', () => {
+            const doc = createPDFInstance();
+            const pdfBlob = doc.output('bloburl');
+            const iframe = document.getElementById('pdf-frame');
+            iframe.src = pdfBlob;
+            
+            // Show Modal
+            const modal = document.getElementById('previewModal');
+            modal.style.display = "block";
+        });
+
+        // Download PDF Button
+        document.getElementById('generate-pdf').addEventListener('click', () => {
+            const doc = createPDFInstance();
+            const invoiceNo = document.getElementById('invoice-no').value || 'Invoice';
+            doc.save(`${invoiceNo}.pdf`);
+        });
+
+        // Modal Close Logic
+        const modal = document.getElementById('previewModal');
+        const span = document.getElementsByClassName("close")[0];
+
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>
