@@ -112,7 +112,6 @@
             justify-content: center;
             gap: 8px;
             transition: transform 0.1s, opacity 0.3s;
-            text-decoration: none; /* For fallback links */
         }
         .btn-preview {
             background-color: #17a2b8;
@@ -147,78 +146,6 @@
             padding-top: 15px;
         }
         
-        /* Modal Styles */
-        .modal {
-            display: none; 
-            position: fixed; 
-            z-index: 1000; 
-            left: 0;
-            top: 0;
-            width: 100%; 
-            height: 100%; 
-            overflow: auto; 
-            background-color: rgba(0,0,0,0.6); 
-            backdrop-filter: blur(5px);
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: 2vh auto; 
-            padding: 0;
-            border: none;
-            width: 90%; 
-            height: 95%;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 4px 25px rgba(0,0,0,0.2);
-        }
-        .modal-header {
-            padding: 15px;
-            background: #f1f1f1;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #ddd;
-        }
-        .modal-actions {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .btn-open-new {
-            background-color: #007bff;
-            color: white;
-            text-decoration: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            font-size: 14px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            border: none;
-            cursor: pointer;
-        }
-        .btn-open-new:hover {
-            background-color: #0056b3;
-        }
-        .close {
-            color: #555;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            line-height: 1;
-        }
-        .close:hover {
-            color: #000;
-        }
-        iframe {
-            width: 100%;
-            flex-grow: 1;
-            border: none;
-        }
-
         /* Responsive design */
         @media (max-width: 600px) {
             .container {
@@ -237,8 +164,6 @@
             th, td {
                 padding: 8px;
             }
-            /* Hide iframe on very small screens if it breaks layout, 
-               but usually we want to keep it for preview */
         }
     </style>
 </head>
@@ -264,7 +189,7 @@
 
             <div>
                 <label for="journey-date">Journey Date:</label>
-                <input type="text" id="journey-date" placeholder="e.g., 07/12/2025 to 15/12/2025" required>
+                <input type="text" id="journey-date" placeholder="e.g., 07/12/2025 & 15/12/2025" required>
             </div>
 
             <div class="table-container">
@@ -306,23 +231,6 @@
                 Developed by Anshumaan Sharma
             </div>
         </form>
-    </div>
-
-    <!-- Preview Modal -->
-    <div id="previewModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span style="font-weight: bold; font-size: 18px;">Invoice Preview</span>
-                <div class="modal-actions">
-                    <!-- Button to try opening in system viewer -->
-                    <button type="button" id="open-system-viewer" class="btn-open-new">
-                        <i class="fas fa-external-link-alt"></i> Open in System Viewer
-                    </button>
-                    <span class="close">&times;</span>
-                </div>
-            </div>
-            <iframe id="pdf-frame"></iframe>
-        </div>
     </div>
 
     <!-- Images (Assuming files exist) -->
@@ -636,81 +544,19 @@
             return doc;
         }
 
-        // Preview PDF Button (Updated for APK compatibility)
+        // Preview PDF Button (Updated to Open in New Tab Directly)
         document.getElementById('preview-pdf').addEventListener('click', () => {
             const doc = createPDFInstance();
-            // Use output('bloburl') for the iframe
-            const pdfBlobUrl = doc.output('bloburl');
-            
-            const iframe = document.getElementById('pdf-frame');
-            iframe.src = pdfBlobUrl;
-
-            // Also set up the "Open in System Viewer" button with a Data URI
-            // Data URIs are sometimes handled better by Android WebViews for intents
-            const pdfDataUri = doc.output('datauristring');
-            
-            const systemBtn = document.getElementById('open-system-viewer');
-            
-            // Note: In some WebView wrappers, clicking a Data URI link triggers a download
-            // which then prompts to open the file.
-            systemBtn.onclick = function() {
-                // Try window.open first
-                const win = window.open(pdfBlobUrl, '_blank');
-                if(!win) {
-                    // Fallback to updating location (sometimes works in webviews)
-                    // or triggering a download anchor
-                   alert("If the file does not open, please use the Download button.");
-                }
-            };
-            
-            // Show Modal
-            const modal = document.getElementById('previewModal');
-            modal.style.display = "block";
+            const pdfBlob = doc.output('bloburl');
+            window.open(pdfBlob, '_blank');
         });
 
-        // Download PDF Button (Android Safe Version)
+        // Download PDF Button
         document.getElementById('generate-pdf').addEventListener('click', () => {
             const doc = createPDFInstance();
             const invoiceNo = document.getElementById('invoice-no').value || 'Invoice';
-            const fileName = `${invoiceNo}.pdf`;
-
-            try {
-                // Standard save (works in PC and modern mobile browsers)
-                doc.save(fileName);
-            } catch(e) {
-                console.log("Standard save failed, trying fallback...");
-            }
-            
-            // Android WebView Fallback:
-            // Explicitly create an anchor with Data URI which "Website-to-APK" builders prefer
-            setTimeout(() => {
-                try {
-                    const dataUri = doc.output('datauristring');
-                    const link = document.createElement('a');
-                    link.href = dataUri;
-                    link.download = fileName;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                } catch(e) {
-                    console.error("Fallback download failed", e);
-                }
-            }, 500);
+            doc.save(`${invoiceNo}.pdf`);
         });
-
-        // Modal Close Logic
-        const modal = document.getElementById('previewModal');
-        const span = document.getElementsByClassName("close")[0];
-
-        span.onclick = function() {
-            modal.style.display = "none";
-        }
-
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
     </script>
 </body>
 </html>
