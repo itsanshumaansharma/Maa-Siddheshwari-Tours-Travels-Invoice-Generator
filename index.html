@@ -180,9 +180,29 @@
             align-items: center;
             border-bottom: 1px solid #ddd;
         }
+        .modal-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .btn-open-new {
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-open-new:hover {
+            background-color: #0056b3;
+        }
         .close {
             color: #555;
-            font-size: 24px;
+            font-size: 28px;
             font-weight: bold;
             cursor: pointer;
             line-height: 1;
@@ -239,7 +259,7 @@
 
             <div>
                 <label for="journey-date">Journey Date:</label>
-                <input type="text" id="journey-date" placeholder="e.g., 07/12/2025 & 08/12/2025" required>
+                <input type="text" id="journey-date" placeholder="e.g., 01/12/2025 to 08/12/2025" required>
             </div>
 
             <div class="table-container">
@@ -288,7 +308,12 @@
         <div class="modal-content">
             <div class="modal-header">
                 <span style="font-weight: bold; font-size: 18px;">Invoice Preview</span>
-                <span class="close">&times;</span>
+                <div class="modal-actions">
+                    <a id="open-new-tab" href="#" target="_blank" class="btn-open-new">
+                        <i class="fas fa-external-link-alt"></i> Open in New Tab
+                    </a>
+                    <span class="close">&times;</span>
+                </div>
             </div>
             <iframe id="pdf-frame"></iframe>
         </div>
@@ -611,6 +636,9 @@
             const pdfBlob = doc.output('bloburl');
             const iframe = document.getElementById('pdf-frame');
             iframe.src = pdfBlob;
+
+            // Set the Open New Tab button link
+            document.getElementById('open-new-tab').href = pdfBlob;
             
             // Show Modal
             const modal = document.getElementById('previewModal');
