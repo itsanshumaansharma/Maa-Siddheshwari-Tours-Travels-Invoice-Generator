@@ -59,6 +59,13 @@
             border-color: #007bff;
             outline: none;
         }
+        /* Style for read-only auto-calculated inputs */
+        input[readonly] {
+            background-color: #f9f9f9;
+            color: #777;
+            cursor: not-allowed;
+            border-color: #eee;
+        }
         .table-container {
             overflow-x: auto;
             border-radius: 6px;
@@ -112,6 +119,7 @@
             justify-content: center;
             gap: 8px;
             transition: transform 0.1s, opacity 0.3s;
+            text-decoration: none;
         }
         .btn-preview {
             background-color: #17a2b8;
@@ -189,7 +197,7 @@
 
             <div>
                 <label for="journey-date">Journey Date:</label>
-                <input type="text" id="journey-date" placeholder="e.g., 07/12/2025 & 15/12/2025" required>
+                <input type="text" id="journey-date" placeholder="e.g., 07/12/2025 to 10/12/2025" required>
             </div>
 
             <div class="table-container">
@@ -297,12 +305,14 @@
             rowCount++;
             const tbody = document.querySelector('#items-table tbody');
             const row = document.createElement('tr');
+            
+            // Removed 'readonly' from amount input to allow manual edits by default
             row.innerHTML = `
                 <td>${rowCount}</td>
                 <td><input type="text" class="desc" required placeholder="Description"></td>
                 <td><input type="number" class="rate" min="0" placeholder="0"></td>
                 <td><input type="number" class="dist" min="0" placeholder="0"></td>
-                <td><input type="number" class="amount" min="0" required readonly placeholder="0.00"></td>
+                <td><input type="number" class="amount" min="0" required placeholder="0.00"></td>
                 <td><button type="button" class="action-btn delete-row"><i class="fas fa-trash"></i></button></td>
             `;
             tbody.appendChild(row);
@@ -315,19 +325,36 @@
             const rateInput = row.querySelector('.rate');
             const distInput = row.querySelector('.dist');
             const amountInput = row.querySelector('.amount');
-            const updateAmount = () => {
-                const rate = parseFloat(rateInput.value) || 0;
-                const dist = parseFloat(distInput.value) || 0;
-                if (rate > 0 && dist > 0) {
+            
+            // Logic: 
+            // 1. If Rate AND Distance are present -> Calculate Amount and LOCK Amount field (ReadOnly)
+            // 2. If Rate OR Distance is missing -> Unlock Amount field (Editable for Toll/Allowance)
+            
+            const updateRowLogic = () => {
+                const rate = parseFloat(rateInput.value);
+                const dist = parseFloat(distInput.value);
+                
+                // Check if both rate and distance have valid numbers
+                if (!isNaN(rate) && !isNaN(dist) && rate > 0 && dist > 0) {
+                    // Auto-calculate and lock
                     amountInput.value = (rate * dist).toFixed(2);
+                    amountInput.readOnly = true;
+                    amountInput.style.backgroundColor = "#f9f9f9";
                 } else {
-                    amountInput.value = '';
+                    // Unlock for manual entry (Toll Tax etc)
+                    amountInput.readOnly = false;
+                    amountInput.style.backgroundColor = "white";
+                    // We DO NOT clear the value here, to preserve manual entries or partial edits
                 }
                 calculateTotal();
             };
-            rateInput.addEventListener('input', updateAmount);
-            distInput.addEventListener('input', updateAmount);
+
+            rateInput.addEventListener('input', updateRowLogic);
+            distInput.addEventListener('input', updateRowLogic);
+            
+            // Allow manual amount input to trigger total calculation
             amountInput.addEventListener('input', calculateTotal);
+
             row.querySelector('.delete-row').addEventListener('click', () => {
                 row.remove();
                 rowCount--;
@@ -544,18 +571,39 @@
             return doc;
         }
 
-        // Preview PDF Button (Updated to Open in New Tab Directly)
+        // Preview PDF Button (Open in New Tab Directly)
         document.getElementById('preview-pdf').addEventListener('click', () => {
             const doc = createPDFInstance();
-            const pdfBlob = doc.output('bloburl');
-            window.open(pdfBlob, '_blank');
+            const pdfBlobUrl = doc.output('bloburl');
+            window.open(pdfBlobUrl, '_blank');
         });
 
-        // Download PDF Button
+        // Download PDF Button (Android APK Safe)
         document.getElementById('generate-pdf').addEventListener('click', () => {
             const doc = createPDFInstance();
             const invoiceNo = document.getElementById('invoice-no').value || 'Invoice';
-            doc.save(`${invoiceNo}.pdf`);
+            const fileName = `${invoiceNo}.pdf`;
+
+            try {
+                doc.save(fileName);
+            } catch(e) {
+                console.log("Standard save failed");
+            }
+            
+            // APK Fallback
+            setTimeout(() => {
+                try {
+                    const dataUri = doc.output('datauristring');
+                    const link = document.createElement('a');
+                    link.href = dataUri;
+                    link.download = fileName;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } catch(e) {
+                    console.error("Fallback download failed", e);
+                }
+            }, 500);
         });
     </script>
 </body>
